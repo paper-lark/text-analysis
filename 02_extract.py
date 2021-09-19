@@ -73,7 +73,7 @@ def main():
     # FIXME: process texts before lemmatizing
     lemma_cnt = Counter()
     m = Mystem()
-    word_re = re.compile(r'\w+')
+    word_re = re.compile(r'[a-zA-ZА-Яа-яёЁ]+')
 
     for p in pages:
         text = extract_text(p)
