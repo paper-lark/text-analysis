@@ -6,8 +6,6 @@ from scipy.spatial.distance import cosine
 
 
 def calculate_score(doc_w, query_w):
-    # doc_w = doc_w * np.heaviside(query_w, 0)
-    # TODO: normalize
     return 1 - cosine(doc_w, query_w)
 
 

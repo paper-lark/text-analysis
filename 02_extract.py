@@ -70,7 +70,6 @@ def main():
         print(f'Saved file={filename}')
 
     # parse documents and count lemmas
-    # FIXME: process texts before lemmatizing
     lemma_cnt = Counter()
     m = Mystem()
     word_re = re.compile(r'[a-zA-ZА-Яа-яёЁ]+')
