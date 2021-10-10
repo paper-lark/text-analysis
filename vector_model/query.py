@@ -10,6 +10,8 @@ def get_weights_for_query(query: str, vocab: Dictionary, log_tf: bool = False) -
     # calculate query vector
     query_lemmas = list(map(lemmatize_sentence, [query]))
     query_tf = get_sentence_lemma_tf(query_lemmas, vocab.lemma_to_index)
+    if log_tf:
+        query_tf = np.log10(query_tf + 1)
     query_vec = normalize_cosine(query_tf)
 
     # calculate dictionary vectors
@@ -22,7 +24,7 @@ def get_weights_for_query(query: str, vocab: Dictionary, log_tf: bool = False) -
     return weights
 
 
-def get_relevant_sentences(query: str, vocab: Dictionary, n: int = 20, log_tf: bool = False) -> pd.DataFrame:
+def get_relevant_sentences(query: str, vocab: Dictionary, n: int, log_tf: bool = False) -> pd.DataFrame:
     weights = get_weights_for_query(query, vocab, log_tf=log_tf)
     idx = np.flip(np.argsort(weights))[:n]
     return pd.DataFrame(dict(

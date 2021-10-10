@@ -3,6 +3,8 @@ import argparse
 import pathlib
 from typing import List
 
+import pandas as pd
+
 from extract import ArticleSource, extract_sentences_from_sources
 from dictionary import Dictionary
 from query import get_relevant_sentences
@@ -20,11 +22,14 @@ def main():
                         help='should use logarithmic formula for tf (default: false)')
     parser.add_argument('-q', '--query', dest='query', type=str, default='',
                         help='query to process (default: all fact queries)')
+    parser.add_argument('-n', dest='top_n', type=str, default=10,
+                        help='top results to return (default: 10)')
 
     args = parser.parse_args()
     should_build_vocabulary = args.should_build_vocabulary
     should_use_log_tf = args.should_use_log_tf
     query = args.query
+    top_n = args.top_n
 
     # get dictionary
     vocab_dir = pathlib.Path('cache')
@@ -56,8 +61,8 @@ def main():
     # process query
     if query:
         print(f"Processing query: {query}")
-        df = get_relevant_sentences(query, vocab, log_tf=should_use_log_tf)
-        df.to_csv(results_dir / 'result.csv', index=True, index_label='index')
+        df = get_relevant_sentences(query, vocab, top_n, log_tf=should_use_log_tf)
+        save_results(df, results_dir, f'result')
     else:
         print(f"Processing fact queries")
         default_queries = [
@@ -67,9 +72,14 @@ def main():
         ]
         for i, q in enumerate(default_queries):
             for should_use_log_tf in (True, False):
-                df = get_relevant_sentences(q, vocab, log_tf=should_use_log_tf)
+                df = get_relevant_sentences(q, vocab, top_n, log_tf=should_use_log_tf)
                 postfix = "log" if should_use_log_tf else "plain"
-                df.to_csv(results_dir / f'/result{i}_{postfix}.csv', index=True, index_label='index')
+                save_results(df, results_dir, f'result{i}_{postfix}')
+
+
+def save_results(df: pd.DataFrame, results_dir: pathlib.Path, file_name: str):
+    df.to_csv(results_dir / f'{file_name}.csv', index=True, index_label='index')
+    df.to_markdown(results_dir / f'{file_name}.md', index=False)
 
 
 if __name__ == '__main__':

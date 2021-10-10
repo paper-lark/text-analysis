@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import re
+from pathlib import Path
 from typing import List, Optional, Iterable
-from zipfile import Path
 
 from bs4 import BeautifulSoup
 import requests
