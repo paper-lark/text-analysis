@@ -1,19 +1,35 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
+import argparse
+import pathlib
 from typing import List
 
 from extract import ArticleSource, extract_sentences_from_sources
 from dictionary import Dictionary
 from query import get_relevant_sentences
+from utils import create_dir
 
 
 def main():
     # parse args
-    should_prepare_dict = len(sys.argv) == 2 and sys.argv[1] == "build-dict"
+    parser = argparse.ArgumentParser(description='Run tf-idf vector model')
+    parser.add_argument('-b', '--build-vocabulary', dest='should_build_vocabulary',
+                        action=argparse.BooleanOptionalAction,
+                        help='should build vocabulary or use cache (default: use cache)')
+    parser.add_argument('-l', '--log-tf', dest='should_use_log_tf',
+                        action=argparse.BooleanOptionalAction,
+                        help='should use logarithmic formula for tf (default: false)')
+    parser.add_argument('-q', '--query', dest='query', type=str, default='',
+                        help='query to process (default: all fact queries)')
+
+    args = parser.parse_args()
+    should_build_vocabulary = args.should_build_vocabulary
+    should_use_log_tf = args.should_use_log_tf
+    query = args.query
 
     # get dictionary
-    if should_prepare_dict:
+    vocab_dir = pathlib.Path('cache')
+    if should_build_vocabulary:
+        print("Building vocabulary")
         links: List[ArticleSource] = [
             ArticleSource('Вифлеемская звезда', 'https://ru.wikipedia.org/wiki/Вифлеемская_звезда'),
             ArticleSource('Великое соединение', 'https://ru.wikipedia.org/wiki/Великое_соединение'),
@@ -27,28 +43,33 @@ def main():
 
         # prepare dictionary with idf
         vocab = Dictionary.from_sentences(sentences)
-        vocab.store()
+        create_dir(vocab_dir)
+        vocab.store(vocab_dir)
     else:
-        vocab = Dictionary.read()
+        print("Using vocabulary from cache")
+        vocab = Dictionary.read(vocab_dir)
 
     # create results folder
-    results_dir = 'results'
-    try:
-        os.mkdir(results_dir, mode=0o755)
-    except FileExistsError:
-        pass
+    results_dir = pathlib.Path('results')
+    create_dir(results_dir)
 
     # process query
-    queries = [
-        "По мнению Кеплера, Вифлеемская звезда могла быть Великим соединением.",
-        "Вор, которому смертную казнь заменили каторгой, стал одним из богатейших людей Австралии",
-        "Творческому порыву слепого музыканта поспособствовали четыре дня в коме."
-    ]
-    for i, q in enumerate(queries):
-        for should_use_log_tf in (True, False):
-            df = get_relevant_sentences(q, vocab, log_tf=should_use_log_tf)
-            postfix = "log" if should_use_log_tf else "plain"
-            df.to_csv(f'{results_dir}/result{i}_{postfix}.csv', index=True, index_label='index')
+    if query:
+        print(f"Processing query: {query}")
+        df = get_relevant_sentences(query, vocab, log_tf=should_use_log_tf)
+        df.to_csv(results_dir / 'result.csv', index=True, index_label='index')
+    else:
+        print(f"Processing fact queries")
+        default_queries = [
+            "По мнению Кеплера, Вифлеемская звезда могла быть Великим соединением.",
+            "Вор, которому смертную казнь заменили каторгой, стал одним из богатейших людей Австралии",
+            "Творческому порыву слепого музыканта поспособствовали четыре дня в коме."
+        ]
+        for i, q in enumerate(default_queries):
+            for should_use_log_tf in (True, False):
+                df = get_relevant_sentences(q, vocab, log_tf=should_use_log_tf)
+                postfix = "log" if should_use_log_tf else "plain"
+                df.to_csv(results_dir / f'/result{i}_{postfix}.csv', index=True, index_label='index')
 
 
 if __name__ == '__main__':

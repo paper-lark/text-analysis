@@ -2,12 +2,16 @@
 
 import re
 from typing import List, Optional, Iterable
+from zipfile import Path
+
 from bs4 import BeautifulSoup
 import requests
 import os
 from dataclasses import dataclass
 from razdel import sentenize
 import unicodedata
+
+from utils import create_dir
 
 
 @dataclass
@@ -67,18 +71,14 @@ def strip_accents(s: str, accents=('COMBINING ACUTE ACCENT', 'COMBINING GRAVE AC
     return unicodedata.normalize('NFC', ''.join(chars))
 
 
-def get_pages(links: Iterable[ArticleSource], cache_dir: Optional[str]) -> List[str]:
+def get_pages(links: Iterable[ArticleSource], cache_dir: Optional[Path]) -> List[str]:
     pages: List[str] = []
-    cache_dir = cache_dir or "cache/pages"
-
-    try:
-        os.mkdir(cache_dir, mode=0o755)
-    except FileExistsError:
-        pass
+    pages_dir = cache_dir or Path('cache', 'pages')
+    create_dir(pages_dir)
 
     for link in links:
         filename = f'{link.name}.html'
-        filepath = os.path.join(cache_dir, filename)
+        filepath = pages_dir / filename
         if os.path.exists(filepath):
             print(f'File={filename} exists. Skipping')
             with open(filepath, 'r') as f:
@@ -102,6 +102,6 @@ def get_sentences(texts: Iterable[str]) -> List[str]:
     return result
 
 
-def extract_sentences_from_sources(links: List[ArticleSource], page_cache_dir: Optional[str] = None) -> List[str]:
+def extract_sentences_from_sources(links: List[ArticleSource], page_cache_dir: Optional[Path] = None) -> List[str]:
     texts = map(extract_text_from_page, get_pages(links, page_cache_dir))
     return get_sentences(texts)

@@ -13,7 +13,7 @@ def get_weights_for_query(query: str, vocab: Dictionary, log_tf: bool = False) -
     query_vec = normalize_cosine(query_tf)
 
     # calculate dictionary vectors
-    sentence_lemma_tf = np.where(query_tf > 0, vocab.sentence_lemma_tf, 0)
+    sentence_lemma_tf = vocab.sentence_lemma_tf
     if log_tf:
         sentence_lemma_tf = np.log10(sentence_lemma_tf + 1)
     sentences_vec = normalize_cosine(sentence_lemma_tf * vocab.lemma_idf[np.newaxis, :])

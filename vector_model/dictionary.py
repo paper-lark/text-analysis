@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 import json
+from pathlib import Path
 from typing import List, Dict
 from dataclasses import dataclass
 
@@ -16,17 +17,17 @@ class Dictionary:
     sentence_lemma_tf: np.ndarray
     sentences: List[str]
 
-    def store(self, cache_dir: str = "cache"):
-        np.save(cache_dir + "/lemma_idf.npy", self.lemma_idf, allow_pickle=False)
-        np.save(cache_dir + "/sentence_tf.npy", self.sentence_lemma_tf, allow_pickle=False)
-        with open(cache_dir + '/dict.json', 'w') as f:
+    def store(self, cache_dir: Path):
+        np.save(cache_dir / "lemma_idf.npy", self.lemma_idf, allow_pickle=False)
+        np.save(cache_dir / "sentence_tf.npy", self.sentence_lemma_tf, allow_pickle=False)
+        with open(cache_dir / 'dict.json', 'w') as f:
             json.dump(dict(lemmas=self.lemma_to_index, sentences=self.sentences), f, ensure_ascii=False)
 
     @staticmethod
-    def read(cache_dir: str = "cache") -> Dictionary:
-        idf = np.load(cache_dir + "/lemma_idf.npy")
-        tf = np.load(cache_dir + "/sentence_tf.npy")
-        with open(cache_dir + '/dict.json', 'r') as f:
+    def read(cache_dir: Path) -> Dictionary:
+        idf = np.load(cache_dir / "lemma_idf.npy")
+        tf = np.load(cache_dir / "sentence_tf.npy")
+        with open(cache_dir / 'dict.json', 'r') as f:
             res = json.load(f)
             lemmas: Dict[str, int] = res['lemmas']
             sentences: List[str] = res['sentences']
