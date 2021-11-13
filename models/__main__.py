@@ -4,6 +4,7 @@ import pathlib
 from typing import List
 
 import pandas as pd
+import numpy as np
 
 from extract import ArticleSource, extract_sentences_from_sources
 from dictionary import Dictionary
@@ -63,7 +64,9 @@ def main():
         dict(query="Творческому порыву слепого музыканта поспособствовали четыре дня в коме.",
              scores='stevie_wonder_scores.json')
     ]
-    for i, desc in enumerate(default_queries, start=1):
+
+    ndcg_results = np.zeros((3, 4), dtype=float)
+    for i, desc in enumerate(default_queries):
         query, scores = desc['query'], desc['scores']
         vocab = Dictionary.read(vocab_dir, scores)
         print(f'Processing query = "{query}"')
@@ -73,9 +76,12 @@ def main():
             VectorModel(doc_lemma_tf=vocab.sentence_lemma_tf, lemma_idf=vocab.lemma_idf, log_tf=True),
             LanguageModel(doc_lemma_tf=vocab.sentence_lemma_tf, la=0.5),
             LanguageModel(doc_lemma_tf=vocab.sentence_lemma_tf, la=0.9)
-        ], start=1):
-            ndcg = calculate_serp_ndcg(query, model, vocab, results_dir, f'result{i}_{j}')
+        ]):
+            ndcg = calculate_serp_ndcg(query, model, vocab, results_dir, f'result{i + 1}_{j + 1}')
+            ndcg_results[i, j] = ndcg
             print(f'{str(model)}: NDCG = {ndcg:.5}')
+
+    print("Mean results for models:", np.mean(ndcg_results, axis=0))
 
 
 def build_dictionary(vocab_dir: pathlib.Path):
