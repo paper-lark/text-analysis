@@ -265,5 +265,6 @@ cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/pycharm+all,python,macos
 
-cache
-results
+models/cache/*
+!models/cache/*_scores.json
+models/results

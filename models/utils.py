@@ -4,7 +4,4 @@ from pathlib import Path
 
 
 def create_dir(dir_path: Path):
-    try:
-        os.mkdir(dir_path, mode=0o755)
-    except FileExistsError:
-        pass
+    dir_path.mkdir(parents=True, exist_ok=True, mode=0o755)
